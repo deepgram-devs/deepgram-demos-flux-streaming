@@ -6,6 +6,10 @@ A simple JavaScript demo application for testing the Deepgram FLUX API - the fir
 
 FLUX is Deepgram's breakthrough conversational AI model that understands **turn-taking dynamics** - not just transcribing words, but knowing when to listen, when to think, and when to speak. Perfect for building voice agents and interactive applications.
 
+## Demo Browser Support
+
+This demo will run in Chrome and Safari browsers only. No Firefox support.
+
 ## ✨ Demo Features
 
 - **🎤 Real-time microphone input** with Linear16 PCM audio processing
@@ -126,11 +130,6 @@ FLUX API has **strict audio format requirements**:
 - **Audio format**: FLUX requires Linear16 PCM (handled automatically by the app)
 - **Early access**: Confirm your account has FLUX API access
 
-### Common Error Messages
-- **`Error parsing message: "[object Blob]"`**: Fixed in current version
-- **`buffer size must be power of two`**: Fixed in current version
-- **`EADDRINUSE`**: Port already in use, try different ports or kill existing processes
-
 ## 📊 What You'll See Working
 
 When everything is working correctly, you should see:
@@ -146,30 +145,3 @@ When everything is working correctly, you should see:
 - Audio chunks being forwarded (2048 bytes each)
 - FLUX responses with TurnInfo events
 - Message type debugging information
-
-## 🚧 Early Access Limitations
-
-- **Max connections**: 5 concurrent per account
-- **Production use**: Not permitted during early access
-- **Availability**: No uptime guarantees (sandbox environment)
-- **Language**: English only currently
-- **Audio formats**: Linear16 PCM only
-
-## 🔮 Future Enhancements
-
-Potential improvements for production use:
-- Multiple language support when available
-- SDK integration when released
-- Additional audio format support
-- Voice activity detection tuning
-- Batch processing capabilities
-- Real-time audio visualization
-
-## 🆘 Support
-
-For technical issues or questions about FLUX API access:
-- Contact your Deepgram representative
-- Check Deepgram's FLUX API documentation
-- Report issues in this repository
-
-**Built for the future of conversational AI** 🚀
