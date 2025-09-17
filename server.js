@@ -68,7 +68,9 @@ wsServer.on('connection', (clientWs, req) => {
   // Build Deepgram WebSocket URL with client parameters
   const deepgramUrl = `wss://api.preview.deepgram.com/v2/listen?${searchParams.toString()}`;
 
-  console.log(`🎯 Connecting to Deepgram: ${deepgramUrl}`);
+  console.log(`🎯 Connecting to Deepgram FLUX API:`);
+  console.log(`   URL: ${deepgramUrl}`);
+  console.log(`   Parameters: ${Array.from(searchParams.entries()).map(([k, v]) => `${k}=${v}`).join(', ')}`);
 
   // Create connection to Deepgram with proper authentication
   const deepgramWs = new WebSocket(deepgramUrl, {
@@ -78,33 +80,61 @@ wsServer.on('connection', (clientWs, req) => {
   });
 
   // Forward messages from client to Deepgram
+  let messageCount = 0;
   clientWs.on('message', (data) => {
+    messageCount++;
+
+    // Log first few messages and periodically thereafter
+    if (messageCount <= 5 || messageCount % 50 === 0) {
+      console.log(`📤 Client->Deepgram message ${messageCount}: ${data.byteLength || data.length} bytes, type: ${data.constructor.name}`);
+    }
+
     if (deepgramWs.readyState === WebSocket.OPEN) {
       deepgramWs.send(data);
+    } else {
+      if (messageCount <= 3) {
+        console.log(`❌ Cannot forward to Deepgram: readyState=${deepgramWs.readyState}`);
+      }
     }
   });
 
   // Forward messages from Deepgram to client
+  let responseCount = 0;
   deepgramWs.on('message', (data) => {
+    responseCount++;
+
+    // Convert data to string if it's binary
+    const messageText = data.toString('utf8');
+
+    // Log all Deepgram responses (they should be relatively infrequent)
+    console.log(`📨 Deepgram response ${responseCount}: ${messageText.substring(0, 150)}${messageText.length > 150 ? '...' : ''}`);
+    console.log(`🔍 Message type: ${typeof data}, constructor: ${data.constructor.name}, isBuffer: ${Buffer.isBuffer(data)}`);
+
     if (clientWs.readyState === WebSocket.OPEN) {
-      clientWs.send(data);
+      // Send as text, not binary
+      clientWs.send(messageText, { binary: false });
+    } else {
+      console.log(`❌ Cannot forward to client: readyState=${clientWs.readyState}`);
     }
   });
 
   // Handle Deepgram connection events
   deepgramWs.on('open', () => {
-    console.log('✅ Connected to Deepgram FLUX API');
+    console.log('✅ Connected to Deepgram FLUX API successfully');
+    console.log('🎧 Ready to receive audio data...');
   });
 
   deepgramWs.on('error', (error) => {
     console.error('❌ Deepgram connection error:', error.message);
+    console.error('🔍 Error details:', error);
     if (clientWs.readyState === WebSocket.OPEN) {
       clientWs.close(1000, `Deepgram error: ${error.message}`);
     }
   });
 
   deepgramWs.on('close', (code, reason) => {
-    console.log(`🔌 Deepgram connection closed: ${code} - ${reason}`);
+    console.log(`🔌 Deepgram connection closed: ${code} - ${reason || 'No reason provided'}`);
+    console.log('🔍 Common close codes: 1000=Normal, 1002=Protocol error, 1003=Unsupported data, 4008=Invalid request');
     if (clientWs.readyState === WebSocket.OPEN) {
       clientWs.close(code, reason);
     }

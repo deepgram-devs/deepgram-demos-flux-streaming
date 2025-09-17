@@ -112,12 +112,16 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
+            min-height: 300px;
         }
         .events-section, .transcript-section {
             background: #f8f9fa;
             padding: 20px;
             border-radius: 8px;
             min-height: 300px;
+            /* Prevent overflow from affecting layout */
+            overflow: hidden;
+            min-width: 0; /* Allow grid items to shrink */
         }
         .events-section h3, .transcript-section h3 {
             margin-top: 0;
@@ -132,7 +136,12 @@
             font-size: 12px;
             height: 250px;
             overflow-y: auto;
+            overflow-x: auto;
             white-space: pre-wrap;
+            word-wrap: break-word;
+            /* Prevent content from expanding parent */
+            max-width: 100%;
+            box-sizing: border-box;
         }
         .current-transcript {
             background: white;
@@ -181,20 +190,21 @@
         <h1>🎤 Deepgram FLUX API Demo</h1>
 
         <div class="config-section">
-            <h3>Configuration</h3>
-            <div class="input-group">
-                <label for="streamUrl">Audio Stream URL:</label>
-                <input type="url" id="streamUrl" value="http://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
-                       placeholder="Enter streaming audio URL">
-            </div>
+            <h3>FLUX Configuration</h3>
             <div class="input-group">
                 <label for="preflightThreshold">Preflight Threshold (0.2-0.9, optional):</label>
                 <input type="number" id="preflightThreshold" min="0.2" max="0.9" step="0.1"
                        placeholder="Leave empty to disable preflighting">
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    Enable early turn detection for lower latency voice agents
+                </small>
             </div>
             <div class="input-group">
                 <label for="eotThreshold">End-of-Turn Threshold (0.5-0.9):</label>
                 <input type="number" id="eotThreshold" min="0.5" max="0.9" step="0.1" value="0.7">
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    Confidence level required to detect end of speech turn
+                </small>
             </div>
         </div>
 
@@ -202,11 +212,11 @@
             Disconnected
         </div>
 
-        <div class="controls">
-            <button id="connectBtn" class="btn-primary">Connect to FLUX</button>
-            <button id="startStreamBtn" class="btn-secondary" disabled>Start Audio Stream</button>
-            <button id="stopStreamBtn" class="btn-danger" disabled>Stop Stream</button>
-        </div>
+            <div class="controls">
+                <button id="connectBtn" class="btn-primary">Connect to FLUX</button>
+                <button id="startMicBtn" class="btn-secondary" disabled> Start Microphone</button>
+                <button id="stopStreamBtn" class="btn-danger" disabled>Stop</button>
+            </div>
 
         <div class="events-container">
             <div class="events-section">
@@ -244,8 +254,10 @@
         class FluxDemo {
             constructor() {
                 this.ws = null;
-                this.isStreaming = false;
-                this.streamController = null;
+                this.audioContext = null;
+                this.mediaStream = null;
+                this.processor = null;
+                this.isUsingMicrophone = false;
 
                 this.initializeElements();
                 this.setupEventListeners();
@@ -253,12 +265,11 @@
 
             initializeElements() {
                 this.elements = {
-                    streamUrl: document.getElementById('streamUrl'),
                     preflightThreshold: document.getElementById('preflightThreshold'),
                     eotThreshold: document.getElementById('eotThreshold'),
                     connectionStatus: document.getElementById('connectionStatus'),
                     connectBtn: document.getElementById('connectBtn'),
-                    startStreamBtn: document.getElementById('startStreamBtn'),
+                    startMicBtn: document.getElementById('startMicBtn'),
                     stopStreamBtn: document.getElementById('stopStreamBtn'),
                     eventLog: document.getElementById('eventLog'),
                     currentTranscript: document.getElementById('currentTranscript'),
@@ -271,8 +282,8 @@
 
             setupEventListeners() {
                 this.elements.connectBtn.onclick = () => this.toggleConnection();
-                this.elements.startStreamBtn.onclick = () => this.startAudioStream();
-                this.elements.stopStreamBtn.onclick = () => this.stopAudioStream();
+                this.elements.startMicBtn.onclick = () => this.startMicrophone();
+                this.elements.stopStreamBtn.onclick = () => this.stopAll();
             }
 
             toggleConnection() {
@@ -303,6 +314,7 @@
 
                 // Connect to our local WebSocket proxy server
                 const wsUrl = `ws://localhost:3001?${params.toString()}`;
+                this.log(`🔗 Connecting to: ${wsUrl}`);
                 this.ws = new WebSocket(wsUrl);
 
                 this.ws.onopen = () => {
@@ -310,15 +322,17 @@
                     this.updateStatus('connected', 'Connected to FLUX API');
                     this.elements.connectBtn.textContent = 'Disconnect';
                     this.elements.connectBtn.disabled = false;
-                    this.elements.startStreamBtn.disabled = false;
+                    this.elements.startMicBtn.disabled = false;
                 };
 
                 this.ws.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
+                        this.log(`📨 Raw WebSocket message: ${event.data.substring(0, 200)}${event.data.length > 200 ? '...' : ''}`);
                         this.handleFluxMessage(data);
                     } catch (error) {
-                        this.log(`Error parsing message: ${error.message}`);
+                        this.log(`❌ Error parsing message: ${error.message}`);
+                        this.log(`📨 Raw message: ${event.data.substring(0, 100)}`);
                     }
                 };
 
@@ -327,9 +341,9 @@
                     this.updateStatus('disconnected', 'Disconnected');
                     this.elements.connectBtn.textContent = 'Connect to FLUX';
                     this.elements.connectBtn.disabled = false;
-                    this.elements.startStreamBtn.disabled = true;
+                    this.elements.startMicBtn.disabled = true;
                     this.elements.stopStreamBtn.disabled = true;
-                    this.stopAudioStream();
+                    this.stopAll();
                 };
 
                 this.ws.onerror = (error) => {
@@ -341,92 +355,152 @@
 
             disconnect() {
                 if (this.ws) {
-                    this.stopAudioStream();
+                    this.stopAll();
                     this.ws.close();
                     this.ws = null;
                 }
             }
 
-            async startAudioStream() {
-                if (this.isStreaming) return;
 
-                const streamUrl = this.elements.streamUrl.value.trim();
-                if (!streamUrl) {
-                    alert('Please enter a streaming audio URL');
-                    return;
-                }
+            async startMicrophone() {
+                if (this.isUsingMicrophone) return;
 
                 try {
-                    this.log(`Starting audio stream from: ${streamUrl}`);
-                    this.isStreaming = true;
-                    this.elements.startStreamBtn.disabled = true;
-                    this.elements.stopStreamBtn.disabled = false;
+                    this.log('🎤 Starting FLUX transcription with Linear16 PCM...');
+                    this.log('⚠️  FLUX API requires raw PCM data, not compressed audio formats');
 
-                    // Create abort controller for stream
-                    this.streamController = new AbortController();
-
-                    const response = await fetch(streamUrl, {
-                        signal: this.streamController.signal
+                    // Request microphone access with specific constraints for FLUX
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            sampleRate: 16000,
+                            channelCount: 1,
+                            echoCancellation: false,  // Disable processing for cleaner PCM
+                            noiseSuppression: false,
+                            autoGainControl: false
+                        }
                     });
 
-                    if (!response.ok) {
-                        throw new Error(`Failed to fetch stream: ${response.status}`);
-                    }
+                    this.log('✅ Microphone access granted');
+                    this.isUsingMicrophone = true;
+                    this.elements.startMicBtn.disabled = true;
+                    this.elements.stopStreamBtn.disabled = false;
+                    this.mediaStream = stream;
 
-                    const reader = response.body.getReader();
+                    // Create audio context at exactly 16kHz for FLUX
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                        sampleRate: 16000
+                    });
 
-                    const readStream = async () => {
-                        try {
-                            while (this.isStreaming) {
-                                const { done, value } = await reader.read();
+                    this.log(`🔧 Audio context sample rate: ${this.audioContext.sampleRate}Hz`);
 
-                                if (done) {
-                                    this.log('Stream ended');
-                                    break;
-                                }
+                    const source = this.audioContext.createMediaStreamSource(stream);
 
-                                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-                                    this.ws.send(value);
-                                }
+                    // Use 1024 samples (64ms at 16kHz) - must be power of 2 for createScriptProcessor
+                    const bufferSize = 1024;
+                    this.processor = this.audioContext.createScriptProcessor(bufferSize, 1, 1);
+
+                    let chunkCount = 0;
+                    let lastLogTime = 0;
+
+                    this.processor.onaudioprocess = (event) => {
+                        chunkCount++;
+                        const now = Date.now();
+
+                        // Log every 2 seconds to avoid spam
+                        if (now - lastLogTime > 2000) {
+                            this.log(`🔊 Audio processing: ${chunkCount} chunks processed, WebSocket: ${this.ws ? this.ws.readyState : 'null'}`);
+                            lastLogTime = now;
+                        }
+
+                        if (this.isUsingMicrophone && this.ws && this.ws.readyState === WebSocket.OPEN) {
+                            const inputData = event.inputBuffer.getChannelData(0);
+
+                            // Check if we have actual audio signal
+                            let hasSignal = false;
+                            let maxAmplitude = 0;
+                            for (let i = 0; i < inputData.length; i++) {
+                                const abs = Math.abs(inputData[i]);
+                                if (abs > maxAmplitude) maxAmplitude = abs;
+                                if (abs > 0.001) hasSignal = true; // Threshold for detecting audio
                             }
-                        } catch (error) {
-                            if (error.name !== 'AbortError') {
-                                this.log(`Stream error: ${error.message}`);
+
+                            // Log audio level periodically
+                            if (chunkCount % 32 === 0) { // Every ~2 seconds at 64ms chunks
+                                this.log(`🎵 Audio level: max=${(maxAmplitude * 100).toFixed(1)}%, signal=${hasSignal ? 'YES' : 'SILENT'}`);
                             }
-                        } finally {
-                            reader.releaseLock();
+
+                            // Convert Float32 to Int16 (Linear16 PCM format for FLUX)
+                            const int16Array = new Int16Array(inputData.length);
+                            for (let i = 0; i < inputData.length; i++) {
+                                // Clamp and convert to 16-bit signed integer
+                                const clampedValue = Math.max(-1, Math.min(1, inputData[i]));
+                                int16Array[i] = Math.round(clampedValue * 32767);
+                            }
+
+                            // Log first few successful sends
+                            if (chunkCount <= 5) {
+                                this.log(`📤 Sending chunk ${chunkCount}: ${int16Array.length} samples, ${int16Array.buffer.byteLength} bytes`);
+                            }
+
+                            // Send Linear16 PCM data to FLUX API
+                            this.ws.send(int16Array.buffer);
+                        } else {
+                            if (chunkCount <= 3) {
+                                this.log(`❌ Cannot send audio: mic=${this.isUsingMicrophone}, ws=${this.ws ? 'exists' : 'null'}, readyState=${this.ws ? this.ws.readyState : 'n/a'}`);
+                            }
                         }
                     };
 
-                    readStream();
+                    source.connect(this.processor);
+                    this.processor.connect(this.audioContext.destination);
+
+                    this.log('🎤 Linear16 PCM streaming started - speak now!');
+                    this.log(`📊 Sending ${bufferSize} samples (${(bufferSize/16000*1000).toFixed(0)}ms) per chunk`);
 
                 } catch (error) {
-                    this.log(`Error starting stream: ${error.message}`);
-                    this.isStreaming = false;
-                    this.elements.startStreamBtn.disabled = false;
+                    this.log(`❌ Microphone error: ${error.message}`);
+                    this.isUsingMicrophone = false;
+                    this.elements.startMicBtn.disabled = false;
                     this.elements.stopStreamBtn.disabled = true;
                 }
             }
 
-            stopAudioStream() {
-                if (!this.isStreaming) return;
+            stopAll() {
+                // Stop microphone
+                if (this.isUsingMicrophone) {
+                    this.log('🎤 Stopping microphone');
+                    this.isUsingMicrophone = false;
 
-                this.log('Stopping audio stream');
-                this.isStreaming = false;
+                    if (this.processor) {
+                        this.processor.disconnect();
+                        this.processor = null;
+                    }
 
-                if (this.streamController) {
-                    this.streamController.abort();
-                    this.streamController = null;
+                    if (this.audioContext && this.audioContext.state !== 'closed') {
+                        this.audioContext.close();
+                        this.audioContext = null;
+                    }
+
+                    if (this.mediaStream) {
+                        this.mediaStream.getTracks().forEach(track => track.stop());
+                        this.mediaStream = null;
+                    }
                 }
 
-                this.elements.startStreamBtn.disabled = false;
+                // Reset button states
+                this.elements.startMicBtn.disabled = false;
                 this.elements.stopStreamBtn.disabled = true;
+            }
+
+            // Backward compatibility
+            stopAudioStream() {
+                this.stopAll();
             }
 
             handleFluxMessage(data) {
                 this.log(`Received: ${JSON.stringify(data, null, 2)}`);
 
-                // Handle TurnInfo messages
+                // Handle TurnInfo messages (FLUX API responses)
                 if (data.type === 'TurnInfo') {
                     this.updateTurnInfo(data);
 
@@ -447,6 +521,9 @@
                             this.log('📝 Transcript update');
                             break;
                     }
+        } else {
+                    // Log other message types for debugging
+                    this.log(`📨 Message type: ${data.type || 'unknown'}`);
                 }
             }
 

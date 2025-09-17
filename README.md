@@ -2,162 +2,174 @@
 
 A simple JavaScript demo application for testing the Deepgram FLUX API - the first conversational speech recognition model designed for voice agents.
 
-## Features
+## 🎯 What is FLUX?
 
-- Direct WebSocket connection to FLUX API
-- Stream audio from external URLs (like radio streams)
-- Real-time display of FLUX turn-based events:
-  - `StartOfTurn` - User begins speaking
-  - `Update` - Transcript updates
-  - `Preflight` - Medium confidence turn end (optional)
-  - `SpeechResumed` - Speech continues after preflight
-  - `EndOfTurn` - High confidence turn end
-- Configurable thresholds for turn detection
-- Real-time transcript display with turn information
+FLUX is Deepgram's breakthrough conversational AI model that understands **turn-taking dynamics** - not just transcribing words, but knowing when to listen, when to think, and when to speak. Perfect for building voice agents and interactive applications.
 
-## Quick Start
+## ✨ Demo Features
 
-1. **Install dependencies:**
+- **🎤 Real-time microphone input** with Linear16 PCM audio processing
+- **🔄 Turn-based speech recognition** optimized for conversations
+- **⚡ Ultra-low latency** with model-integrated end-of-turn detection
+- **🎯 Smart turn detection** with configurable confidence thresholds
+- **🚀 WebSocket proxy server** with proper authentication
+- **📊 Live event monitoring** with detailed FLUX response logging
+- **🎨 Modern responsive UI** with real-time transcript display
+
+### FLUX Turn-Based Events:
+- **`StartOfTurn`** - User begins speaking (trigger interruption)
+- **`Update`** - Real-time transcript updates during speech
+- **`Preflight`** - Medium confidence turn end (start preparing response)
+- **`SpeechResumed`** - Speech continues after preflight (cancel response)
+- **`EndOfTurn`** - High confidence turn end (send to LLM)
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 14.0.0 or higher
+- Deepgram API key with FLUX early access
+- Modern browser with microphone access
+
+### Setup
+
+1. **Clone and install:**
    ```bash
+   git clone git@github.com:deepgram-devs/deepgram-flux-demo.git
+   cd deepgram-flux-demo
    npm install
    ```
 
 2. **Set your Deepgram API key:**
    ```bash
-   export DEEPGRAM_API_KEY="your_api_key_here"
+   export DEEPGRAM_API_KEY="your_deepgram_api_key_here"
    ```
 
-3. **Start the local server:**
+3. **Start the server:**
    ```bash
    npm start
    ```
-   Or directly with node:
+   Or directly:
    ```bash
    node server.js
    ```
 
-4. **Open your browser:**
+4. **Open the demo:**
    Navigate to `http://localhost:3000`
 
-5. **Configure the demo:**
-   - Use the default BBC World Service stream URL or enter your own
-   - Optionally configure preflight and end-of-turn thresholds
+### Testing FLUX
 
-6. **Test the FLUX API:**
-   - Click "Connect to FLUX"
-   - Click "Start Audio Stream" to begin streaming audio
-   - Watch the real-time events and transcriptions!
+1. **Connect**: Click "Connect to FLUX"
+2. **Start microphone**: Click "🎤 Start Microphone" and grant browser permissions
+3. **Speak clearly**: The app will show real-time transcription and turn events
+4. **Watch the magic**: Observe FLUX's turn detection and conversational flow
 
-## Configuration Options
+## ⚙️ Configuration Options
 
 ### Preflight Threshold (0.2-0.9, optional)
-- Leave empty to disable preflighting (simpler implementation)
-- Set a value to enable early turn detection for lower latency
-- Lower values = more aggressive preflighting
-- Higher values = more conservative preflighting
+- **Leave empty**: Disable preflighting for simpler implementation
+- **Lower values (0.2-0.4)**: More aggressive early turn detection
+- **Higher values (0.6-0.9)**: More conservative preflighting
+- **Recommended**: Start with 0.6 for balanced performance
 
 ### End-of-Turn Threshold (0.5-0.9)
-- Confidence level required to trigger EndOfTurn events
-- Default: 0.7
-- Higher values = more confident turn detection
+- **Default**: 0.7 (good balance of speed and accuracy)
+- **Lower values**: Faster turn detection, more false positives
+- **Higher values**: More confident detection, slightly higher latency
 
-## Architecture
+## 🏗️ Architecture
 
-This demo uses a **WebSocket proxy server** to handle authentication:
+This demo uses a **production-ready WebSocket proxy pattern**:
 
-✅ **How it works:**
-- **Client** connects to local WebSocket proxy (port 3001)
-- **Proxy server** authenticates with Deepgram using your API key
-- **Messages flow** bidirectionally between client ↔ proxy ↔ Deepgram
-- **Full FLUX API support** with proper authentication headers
-
-✅ **Benefits:**
-- **Secure:** API key stays server-side, never exposed to browser
-- **Compatible:** Works with all modern browsers
-- **Production-ready:** Same pattern used in real applications
-
-## Audio Stream Requirements
-
-- **Format:** Linear16 PCM (16-bit signed little-endian)
-- **Sample Rate:** 8000, 16000, 24000, 44100, or 48000 Hz
-- **Channels:** Mono only
-- **Chunk Size:** 80ms recommended for optimal performance
-
-## FLUX Events Explained
-
-### Always Available:
-- **Update:** Periodic messages with current transcript
-- **StartOfTurn:** User begins speaking (trigger interruption)
-- **EndOfTurn:** High confidence turn end (send to LLM)
-
-### With Preflighting Enabled:
-- **Preflight:** Medium confidence turn end (start preparing response)
-- **SpeechResumed:** User continued after preflight (cancel response)
-
-## Example Implementation Pattern
-
-```javascript
-// Simple approach - EndOfTurn only
-switch(event.type) {
-  case 'StartOfTurn':
-    if (agentSpeaking) interruptAgent();
-    break;
-  case 'EndOfTurn':
-    sendToLLM(transcript);
-    break;
-}
-
-// Optimized approach - with preflighting
-switch(event.type) {
-  case 'StartOfTurn':
-    if (agentSpeaking) interruptAgent();
-    break;
-  case 'Preflight':
-    prepareResponse(transcript); // Start LLM early
-    break;
-  case 'SpeechResumed':
-    cancelResponse(); // User still talking
-    break;
-  case 'EndOfTurn':
-    usePreppedResponse(); // Faster response
-    break;
-}
+```
+Browser ←→ Local Proxy Server ←→ Deepgram FLUX API
 ```
 
-## Testing Audio Streams
+**Why a proxy?**
+- **🔐 Security**: API key stays server-side, never exposed to browser
+- **🌐 Compatibility**: Works with all browsers (WebSocket auth limitations)
+- **🚀 Production-ready**: Same pattern used in real voice agent applications
+- **🔄 Message handling**: Proper binary/text conversion for FLUX responses
 
-Default stream (BBC World Service):
-```
-http://stream.live.vc.bbcmedia.co.uk/bbc_world_service
-```
+**Ports:**
+- **3000**: Web interface
+- **3001**: WebSocket proxy to FLUX API
 
-Other test streams:
-- NPR: `https://npr-ice.streamguys1.com/live.mp3`
-- Classical: `http://stream.live.vc.bbcmedia.co.uk/bbc_radio_three`
+## 🎵 Audio Requirements
 
-## Troubleshooting
+FLUX API has **strict audio format requirements**:
 
-**Connection fails immediately:**
-- Check your `DEEPGRAM_API_KEY` environment variable is set correctly
-- Verify you have FLUX early access enabled on your Deepgram account
-- Check browser console and server logs for specific error messages
-- Ensure the WebSocket proxy server is running on port 3001
+- **Format**: Linear16 PCM (raw 16-bit signed little-endian)
+- **Sample Rate**: 16000 Hz (16kHz)
+- **Channels**: Mono only
+- **Chunk Size**: 1024 samples (64ms) for optimal performance
+- **Input**: Browser microphone with real-time processing
 
-**No audio streaming:**
-- Test the audio URL directly in your browser first
-- Some streams may require CORS headers or have geographic restrictions
-- Check that the stream format is compatible (many formats work, but linear16 PCM is preferred)
-- Verify the stream URL is accessible from your server's location
+**Note**: Compressed formats (MP3, AAC, WebM) won't work with FLUX API.
 
-**Server won't start:**
-- Make sure you've run `npm install` to install dependencies
-- Check that ports 3000 and 3001 are not in use by other applications
-- Verify Node.js version is 14.0.0 or higher
+## 🔧 Troubleshooting
 
-## API Limits (Early Access)
+### Connection Issues
+- **Check API key**: Verify `DEEPGRAM_API_KEY` environment variable is set
+- **FLUX access**: Ensure your Deepgram account has FLUX early access enabled
+- **Port conflicts**: Make sure ports 3000 and 3001 are available
+- **Server logs**: Check terminal for detailed connection error messages
 
-- **Max connections:** 5 per account
-- **Production use:** Not permitted during early access
-- **Availability:** No uptime guarantees (sandbox environment)
+### Microphone Issues
+- **Browser permissions**: Ensure microphone access is granted
+- **Audio levels**: Look for "🎵 Audio level" messages in the browser log
+- **No transcripts**: Check if you see "📤 Sending chunk" messages
+- **HTTPS**: Some browsers require HTTPS for microphone access
 
-For production use cases, contact Deepgram about the general availability timeline.
+### No FLUX Responses
+- **Check server logs**: Should see "📨 Deepgram response" messages
+- **WebSocket connection**: Verify proxy server shows "✅ Connected to Deepgram FLUX API"
+- **Audio format**: FLUX requires Linear16 PCM (handled automatically by the app)
+- **Early access**: Confirm your account has FLUX API access
+
+### Common Error Messages
+- **`Error parsing message: "[object Blob]"`**: Fixed in current version
+- **`buffer size must be power of two`**: Fixed in current version
+- **`EADDRINUSE`**: Port already in use, try different ports or kill existing processes
+
+## 📊 What You'll See Working
+
+When everything is working correctly, you should see:
+
+**🖥️ Browser Interface:**
+- Real-time transcript updates as you speak
+- Turn Index, Current Event, and Confidence scores updating
+- FLUX Events log showing JSON responses from the API
+- Audio level indicators showing microphone input
+
+**💻 Server Logs:**
+- Connection success to Deepgram FLUX API
+- Audio chunks being forwarded (2048 bytes each)
+- FLUX responses with TurnInfo events
+- Message type debugging information
+
+## 🚧 Early Access Limitations
+
+- **Max connections**: 5 concurrent per account
+- **Production use**: Not permitted during early access
+- **Availability**: No uptime guarantees (sandbox environment)
+- **Language**: English only currently
+- **Audio formats**: Linear16 PCM only
+
+## 🔮 Future Enhancements
+
+Potential improvements for production use:
+- Multiple language support when available
+- SDK integration when released
+- Additional audio format support
+- Voice activity detection tuning
+- Batch processing capabilities
+- Real-time audio visualization
+
+## 🆘 Support
+
+For technical issues or questions about FLUX API access:
+- Contact your Deepgram representative
+- Check Deepgram's FLUX API documentation
+- Report issues in this repository
+
+**Built for the future of conversational AI** 🚀
