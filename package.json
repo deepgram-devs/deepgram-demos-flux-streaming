@@ -1,0 +1,25 @@
+{
+  "name": "deepgram-flux-demo",
+  "version": "1.0.0",
+  "description": "Demo application for testing Deepgram's FLUX API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "deepgram",
+    "flux",
+    "speech-recognition",
+    "voice-agents",
+    "websocket"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.14.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

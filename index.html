@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepgram FLUX API Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #0056b3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background: #545b62;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: #c82333;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.connecting {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .events-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .events-section, .transcript-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 300px;
+        }
+        .events-section h3, .transcript-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .event-log {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .current-transcript {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            min-height: 100px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .turn-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .info-item {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .info-label {
+            font-weight: 500;
+            color: #666;
+            display: block;
+            font-size: 12px;
+        }
+        .info-value {
+            color: #333;
+            margin-top: 2px;
+        }
+        @media (max-width: 768px) {
+            .events-container {
+                grid-template-columns: 1fr;
+            }
+            .turn-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+        <h1>🎤 Deepgram FLUX API Demo</h1>
+
+        <div class="config-section">
+            <h3>Configuration</h3>
+            <div class="input-group">
+                <label for="streamUrl">Audio Stream URL:</label>
+                <input type="url" id="streamUrl" value="http://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
+                       placeholder="Enter streaming audio URL">
+            </div>
+            <div class="input-group">
+                <label for="preflightThreshold">Preflight Threshold (0.2-0.9, optional):</label>
+                <input type="number" id="preflightThreshold" min="0.2" max="0.9" step="0.1"
+                       placeholder="Leave empty to disable preflighting">
+            </div>
+            <div class="input-group">
+                <label for="eotThreshold">End-of-Turn Threshold (0.5-0.9):</label>
+                <input type="number" id="eotThreshold" min="0.5" max="0.9" step="0.1" value="0.7">
+            </div>
+        </div>
+
+        <div class="status disconnected" id="connectionStatus">
+            Disconnected
+        </div>
+
+        <div class="controls">
+            <button id="connectBtn" class="btn-primary">Connect to FLUX</button>
+            <button id="startStreamBtn" class="btn-secondary" disabled>Start Audio Stream</button>
+            <button id="stopStreamBtn" class="btn-danger" disabled>Stop Stream</button>
+        </div>
+
+        <div class="events-container">
+            <div class="events-section">
+                <h3>FLUX Events</h3>
+                <div id="eventLog" class="event-log"></div>
+            </div>
+            <div class="transcript-section">
+                <h3>Current Turn</h3>
+                <div class="turn-info">
+                    <div class="info-item">
+                        <span class="info-label">Turn Index</span>
+                        <div class="info-value" id="turnIndex">-</div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Current Event</span>
+                        <div class="info-value" id="currentEvent">-</div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">End-of-Turn Confidence</span>
+                        <div class="info-value" id="eotConfidence">-</div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Audio Window</span>
+                        <div class="info-value" id="audioWindow">-</div>
+                    </div>
+                </div>
+                <div class="current-transcript" id="currentTranscript">
+                    Transcript will appear here...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class FluxDemo {
+            constructor() {
+                this.ws = null;
+                this.isStreaming = false;
+                this.streamController = null;
+
+                this.initializeElements();
+                this.setupEventListeners();
+            }
+
+            initializeElements() {
+                this.elements = {
+                    streamUrl: document.getElementById('streamUrl'),
+                    preflightThreshold: document.getElementById('preflightThreshold'),
+                    eotThreshold: document.getElementById('eotThreshold'),
+                    connectionStatus: document.getElementById('connectionStatus'),
+                    connectBtn: document.getElementById('connectBtn'),
+                    startStreamBtn: document.getElementById('startStreamBtn'),
+                    stopStreamBtn: document.getElementById('stopStreamBtn'),
+                    eventLog: document.getElementById('eventLog'),
+                    currentTranscript: document.getElementById('currentTranscript'),
+                    turnIndex: document.getElementById('turnIndex'),
+                    currentEvent: document.getElementById('currentEvent'),
+                    eotConfidence: document.getElementById('eotConfidence'),
+                    audioWindow: document.getElementById('audioWindow')
+                };
+            }
+
+            setupEventListeners() {
+                this.elements.connectBtn.onclick = () => this.toggleConnection();
+                this.elements.startStreamBtn.onclick = () => this.startAudioStream();
+                this.elements.stopStreamBtn.onclick = () => this.stopAudioStream();
+            }
+
+            toggleConnection() {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.disconnect();
+                } else {
+                    this.connect();
+                }
+            }
+
+            connect() {
+                this.updateStatus('connecting', 'Connecting...');
+                this.elements.connectBtn.disabled = true;
+
+                // Build WebSocket URL with parameters for our local proxy
+                const params = new URLSearchParams({
+                    model: 'flux-general-en',
+                    sample_rate: '16000',
+                    encoding: 'linear16',
+                    eot_threshold: this.elements.eotThreshold.value || '0.7'
+                });
+
+                // Add preflight threshold if specified
+                const preflightThreshold = this.elements.preflightThreshold.value;
+                if (preflightThreshold) {
+                    params.append('preflight_threshold', preflightThreshold);
+                }
+
+                // Connect to our local WebSocket proxy server
+                const wsUrl = `ws://localhost:3001?${params.toString()}`;
+                this.ws = new WebSocket(wsUrl);
+
+                this.ws.onopen = () => {
+                    this.log('✅ Connected to FLUX API via proxy server');
+                    this.updateStatus('connected', 'Connected to FLUX API');
+                    this.elements.connectBtn.textContent = 'Disconnect';
+                    this.elements.connectBtn.disabled = false;
+                    this.elements.startStreamBtn.disabled = false;
+                };
+
+                this.ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        this.handleFluxMessage(data);
+                    } catch (error) {
+                        this.log(`Error parsing message: ${error.message}`);
+                    }
+                };
+
+                this.ws.onclose = (event) => {
+                    this.log(`WebSocket closed: ${event.code} - ${event.reason}`);
+                    this.updateStatus('disconnected', 'Disconnected');
+                    this.elements.connectBtn.textContent = 'Connect to FLUX';
+                    this.elements.connectBtn.disabled = false;
+                    this.elements.startStreamBtn.disabled = true;
+                    this.elements.stopStreamBtn.disabled = true;
+                    this.stopAudioStream();
+                };
+
+                this.ws.onerror = (error) => {
+                    this.log(`WebSocket error: ${error.message || 'Unknown error'}`);
+                    this.updateStatus('disconnected', 'Connection error');
+                    this.elements.connectBtn.disabled = false;
+                };
+            }
+
+            disconnect() {
+                if (this.ws) {
+                    this.stopAudioStream();
+                    this.ws.close();
+                    this.ws = null;
+                }
+            }
+
+            async startAudioStream() {
+                if (this.isStreaming) return;
+
+                const streamUrl = this.elements.streamUrl.value.trim();
+                if (!streamUrl) {
+                    alert('Please enter a streaming audio URL');
+                    return;
+                }
+
+                try {
+                    this.log(`Starting audio stream from: ${streamUrl}`);
+                    this.isStreaming = true;
+                    this.elements.startStreamBtn.disabled = true;
+                    this.elements.stopStreamBtn.disabled = false;
+
+                    // Create abort controller for stream
+                    this.streamController = new AbortController();
+
+                    const response = await fetch(streamUrl, {
+                        signal: this.streamController.signal
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch stream: ${response.status}`);
+                    }
+
+                    const reader = response.body.getReader();
+
+                    const readStream = async () => {
+                        try {
+                            while (this.isStreaming) {
+                                const { done, value } = await reader.read();
+
+                                if (done) {
+                                    this.log('Stream ended');
+                                    break;
+                                }
+
+                                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                                    this.ws.send(value);
+                                }
+                            }
+                        } catch (error) {
+                            if (error.name !== 'AbortError') {
+                                this.log(`Stream error: ${error.message}`);
+                            }
+                        } finally {
+                            reader.releaseLock();
+                        }
+                    };
+
+                    readStream();
+
+                } catch (error) {
+                    this.log(`Error starting stream: ${error.message}`);
+                    this.isStreaming = false;
+                    this.elements.startStreamBtn.disabled = false;
+                    this.elements.stopStreamBtn.disabled = true;
+                }
+            }
+
+            stopAudioStream() {
+                if (!this.isStreaming) return;
+
+                this.log('Stopping audio stream');
+                this.isStreaming = false;
+
+                if (this.streamController) {
+                    this.streamController.abort();
+                    this.streamController = null;
+                }
+
+                this.elements.startStreamBtn.disabled = false;
+                this.elements.stopStreamBtn.disabled = true;
+            }
+
+            handleFluxMessage(data) {
+                this.log(`Received: ${JSON.stringify(data, null, 2)}`);
+
+                // Handle TurnInfo messages
+                if (data.type === 'TurnInfo') {
+                    this.updateTurnInfo(data);
+
+                    switch(data.event) {
+                        case 'StartOfTurn':
+                            this.log('🟢 User started speaking');
+                            break;
+                        case 'Preflight':
+                            this.log('🟡 Preflight - medium confidence turn end');
+                            break;
+                        case 'SpeechResumed':
+                            this.log('🔄 Speech resumed after preflight');
+                            break;
+                        case 'EndOfTurn':
+                            this.log('🔴 End of turn - high confidence');
+                            break;
+                        case 'Update':
+                            this.log('📝 Transcript update');
+                            break;
+                    }
+                }
+            }
+
+            updateTurnInfo(data) {
+                this.elements.turnIndex.textContent = data.turn_index || '-';
+                this.elements.currentEvent.textContent = data.event || '-';
+                this.elements.eotConfidence.textContent =
+                    data.end_of_turn_confidence ? data.end_of_turn_confidence.toFixed(2) : '-';
+                this.elements.audioWindow.textContent =
+                    data.audio_window_start !== undefined && data.audio_window_end !== undefined
+                        ? `${data.audio_window_start.toFixed(1)}s - ${data.audio_window_end.toFixed(1)}s`
+                        : '-';
+                this.elements.currentTranscript.textContent = data.transcript || 'Waiting for speech...';
+            }
+
+            updateStatus(type, message) {
+                this.elements.connectionStatus.className = `status ${type}`;
+                this.elements.connectionStatus.textContent = message;
+            }
+
+            log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logMessage = `[${timestamp}] ${message}\n`;
+                this.elements.eventLog.textContent += logMessage;
+                this.elements.eventLog.scrollTop = this.elements.eventLog.scrollHeight;
+            }
+        }
+
+        // Initialize the demo when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            new FluxDemo();
+        });
+    </script>
+  </body>
+</html>
