@@ -4,246 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deepgram FLUX API Demo</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        .container {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .config-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .input-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #555;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        input:focus, select:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-        }
-        .controls {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin: 20px 0;
-        }
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-primary {
-            background: #007bff;
-            color: white;
-        }
-        .btn-primary:hover:not(:disabled) {
-            background: #0056b3;
-        }
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        .btn-secondary:hover:not(:disabled) {
-            background: #545b62;
-        }
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-        .btn-danger:hover:not(:disabled) {
-            background: #c82333;
-        }
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .status {
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-        .status.disconnected {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .status.connecting {
-            background: #fff3cd;
-            color: #856404;
-        }
-        .status.connected {
-            background: #d4edda;
-            color: #155724;
-        }
-        .events-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            min-height: 300px;
-        }
-        .events-section, .transcript-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            min-height: 300px;
-            /* Prevent overflow from affecting layout */
-            overflow: hidden;
-            min-width: 0; /* Allow grid items to shrink */
-        }
-        .events-section h3, .transcript-section h3 {
-            margin-top: 0;
-            color: #333;
-        }
-        .event-log {
-            background: #000;
-            color: #00ff00;
-            padding: 15px;
-            border-radius: 4px;
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 12px;
-            height: 250px;
-            overflow-y: auto;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            /* Prevent content from expanding parent */
-            max-width: 100%;
-            box-sizing: border-box;
-        }
-        .current-transcript {
-            background: white;
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 4px;
-            min-height: 100px;
-            font-size: 16px;
-            line-height: 1.5;
-        }
-        .turn-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .info-item {
-            background: white;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            font-size: 14px;
-        }
-        .info-label {
-            font-weight: 500;
-            color: #666;
-            display: block;
-            font-size: 12px;
-        }
-        .info-value {
-            color: #333;
-            margin-top: 2px;
-        }
-        @media (max-width: 768px) {
-            .events-container {
-                grid-template-columns: 1fr;
-            }
-            .turn-info {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles/deepgram-minimal.css">
   </head>
   <body>
-    <div class="container">
+    <div class="dg-container">
         <h1>🎤 Deepgram FLUX API Demo</h1>
 
-        <div class="config-section">
+        <div class="dg-panel">
             <h3>FLUX Configuration</h3>
-            <div class="input-group">
+            <div class="dg-input-group">
                 <label for="preflightThreshold">Preflight Threshold (0.2-0.9, optional):</label>
                 <input type="number" id="preflightThreshold" min="0.2" max="0.9" step="0.1"
                        placeholder="Leave empty to disable preflighting">
-                <small style="color: #666; display: block; margin-top: 5px;">
+                <small>
                     Enable early turn detection for lower latency voice agents
                 </small>
             </div>
-            <div class="input-group">
+            <div class="dg-input-group">
                 <label for="eotThreshold">End-of-Turn Threshold (0.5-0.9):</label>
                 <input type="number" id="eotThreshold" min="0.5" max="0.9" step="0.1" value="0.7">
-                <small style="color: #666; display: block; margin-top: 5px;">
+                <small>
                     Confidence level required to detect end of speech turn
                 </small>
             </div>
         </div>
 
-        <div class="status disconnected" id="connectionStatus">
+        <div class="dg-status dg-status--disconnected" id="connectionStatus">
             Disconnected
         </div>
 
-            <div class="controls">
-                <button id="connectBtn" class="btn-primary">Connect to FLUX</button>
-                <button id="startMicBtn" class="btn-secondary" disabled> Start Microphone</button>
-                <button id="stopStreamBtn" class="btn-danger" disabled>Stop</button>
+            <div class="dg-controls">
+                <button id="connectBtn" class="btn btn--primary">Connect to FLUX</button>
+                <button id="startMicBtn" class="btn btn--secondary" disabled> Start Microphone</button>
+                <button id="stopStreamBtn" class="btn btn--danger" disabled>Stop</button>
             </div>
 
-        <div class="events-container">
-            <div class="events-section">
+        <div class="dg-two-column-layout">
+            <div class="dg-content-section">
                 <h3>FLUX Events</h3>
-                <div id="eventLog" class="event-log"></div>
+                <div id="eventLog" class="dg-event-log"></div>
             </div>
-            <div class="transcript-section">
+            <div class="dg-content-section">
                 <h3>Current Turn</h3>
-                <div class="turn-info">
-                    <div class="info-item">
-                        <span class="info-label">Turn Index</span>
-                        <div class="info-value" id="turnIndex">-</div>
+                <div class="dg-info-grid">
+                    <div class="dg-info-item">
+                        <span class="dg-info-label">Turn Index</span>
+                        <div class="dg-info-value" id="turnIndex">-</div>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">Current Event</span>
-                        <div class="info-value" id="currentEvent">-</div>
+                    <div class="dg-info-item">
+                        <span class="dg-info-label">Current Event</span>
+                        <div class="dg-info-value" id="currentEvent">-</div>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">End-of-Turn Confidence</span>
-                        <div class="info-value" id="eotConfidence">-</div>
+                    <div class="dg-info-item">
+                        <span class="dg-info-label">End-of-Turn Confidence</span>
+                        <div class="dg-info-value" id="eotConfidence">-</div>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">Audio Window</span>
-                        <div class="info-value" id="audioWindow">-</div>
+                    <div class="dg-info-item">
+                        <span class="dg-info-label">Audio Window</span>
+                        <div class="dg-info-value" id="audioWindow">-</div>
                     </div>
                 </div>
-                <div class="current-transcript" id="currentTranscript">
+                <div class="dg-transcript-display" id="currentTranscript">
                     Transcript will appear here...
                 </div>
             </div>
@@ -540,7 +361,7 @@
             }
 
             updateStatus(type, message) {
-                this.elements.connectionStatus.className = `status ${type}`;
+                this.elements.connectionStatus.className = `dg-status dg-status--${type}`;
                 this.elements.connectionStatus.textContent = message;
             }
 
