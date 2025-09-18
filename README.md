@@ -8,7 +8,7 @@ FLUX is Deepgram's breakthrough conversational AI model that understands **turn-
 
 ## API Preview Mode
 
-This demo currently uses the Flux Preview URL: `wss://api.preview.deepgram.com/v2/listen.` Once Flux is GA, it will be changed to use a Production URL. 
+This demo currently uses the Flux Preview URL: `wss://api.preview.deepgram.com/v2/listen.` Once Flux is GA, it will be changed to use a Production URL.
 
 
 ## Demo Browser Support
@@ -150,3 +150,5 @@ When everything is working correctly, you should see:
 - Audio chunks being forwarded (2048 bytes each)
 - FLUX responses with TurnInfo events
 - Message type debugging information
+
+![ui_image](./images/ui-example.png)
