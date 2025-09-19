@@ -13,9 +13,9 @@
         <div class="dg-panel">
             <h3>FLUX Configuration</h3>
             <div class="dg-input-group">
-                <label for="preflightThreshold">Preflight Threshold (0.2-0.9, optional):</label>
-                <input type="number" id="preflightThreshold" min="0.2" max="0.9" step="0.1"
-                       placeholder="Leave empty to disable preflighting">
+                <label for="eagerEotThreshold">Eager End-of-Turn Threshold (0.2-0.9, optional): NOT SUPPORTED YET</label>
+                <input type="number" id="eagerEotThreshold" min="0.2" max="0.9" step="0.1"
+                       placeholder="Leave empty to disable eager end-of-turn detection">
                 <small>
                     Enable early turn detection for lower latency voice agents
                 </small>
@@ -86,7 +86,7 @@
 
             initializeElements() {
                 this.elements = {
-                    preflightThreshold: document.getElementById('preflightThreshold'),
+                    eagerEotThreshold: document.getElementById('eagerEotThreshold'),
                     eotThreshold: document.getElementById('eotThreshold'),
                     connectionStatus: document.getElementById('connectionStatus'),
                     connectBtn: document.getElementById('connectBtn'),
@@ -127,10 +127,10 @@
                     eot_threshold: this.elements.eotThreshold.value || '0.7'
                 });
 
-                // Add preflight threshold if specified
-                const preflightThreshold = this.elements.preflightThreshold.value;
-                if (preflightThreshold) {
-                    params.append('preflight_threshold', preflightThreshold);
+                // Add eager eot threshold if specified
+                const eagerEotThreshold = this.elements.eagerEotThreshold.value;
+                if (eagerEotThreshold) {
+                    params.append('eager_eot_threshold', eagerEotThreshold);
                 }
 
                 // Connect to our local WebSocket proxy server
@@ -329,11 +329,11 @@
                         case 'StartOfTurn':
                             this.log('🟢 User started speaking');
                             break;
-                        case 'Preflight':
-                            this.log('🟡 Preflight - medium confidence turn end');
+                        case 'EagerEndOfTurn':
+                            this.log('🟡 Eager end of turn - medium confidence turn end');
                             break;
-                        case 'SpeechResumed':
-                            this.log('🔄 Speech resumed after preflight');
+                        case 'TurnResumed':
+                            this.log('🔄 Turn resumed after eager end of turn');
                             break;
                         case 'EndOfTurn':
                             this.log('🔴 End of turn - high confidence');
