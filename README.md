@@ -1,4 +1,4 @@
-# Deepgram FLUX API Demo
+# Deepgram FLUX Streaming Demo
 
 A simple JavaScript demo application for testing the Deepgram FLUX API - the first conversational speech recognition model designed for voice agents.
 
