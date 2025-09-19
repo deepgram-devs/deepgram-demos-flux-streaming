@@ -28,8 +28,8 @@ This demo will run in Chrome and Safari browsers only. No Firefox support.
 ### FLUX Turn-Based Events:
 - **`StartOfTurn`** - User begins speaking (trigger interruption)
 - **`Update`** - Real-time transcript updates during speech
-- **`Preflight`** - Medium confidence turn end (start preparing response)
-- **`SpeechResumed`** - Speech continues after preflight (cancel response)
+- **`Eager EndOfTurn`** - Medium confidence turn end (start preparing response)
+- **`TurnResumed`** - Speech continues after Eager EndOfTurn (cancel response)
 - **`EndOfTurn`** - High confidence turn end (send to LLM)
 
 ## 🚀 Quick Start
@@ -74,10 +74,10 @@ This demo will run in Chrome and Safari browsers only. No Firefox support.
 
 ## ⚙️ Configuration Options
 
-### Preflight Threshold (0.2-0.9, optional)
-- **Leave empty**: Disable preflighting for simpler implementation
+### Eager End-of-Turn Threshold (0.2-0.9, optional)
+- **Leave empty**: Disable for simpler implementation
 - **Lower values (0.2-0.4)**: More aggressive early turn detection
-- **Higher values (0.6-0.9)**: More conservative preflighting
+- **Higher values (0.6-0.9)**: More conservative early turn detection
 - **Recommended**: Start with 0.6 for balanced performance
 
 ### End-of-Turn Threshold (0.5-0.9)
