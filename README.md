@@ -67,7 +67,7 @@ This demo will run in Chrome and Safari browsers only. No Firefox support.
    ```
 
 4. **Open the demo:**
-   Navigate to `http://localhost:3000`
+   Navigate to `http://localhost:3000` or `http://localhost:3000/flux-streaming`
 
 ### Testing FLUX
 
@@ -104,8 +104,7 @@ Browser ←→ Local Proxy Server ←→ Deepgram FLUX API
 - **🔄 Message handling**: Proper binary/text conversion for FLUX responses
 
 **Ports:**
-- **3000**: Web interface
-- **3001**: WebSocket proxy to FLUX API
+- **3000**: Web interface and WebSocket proxy (both on same port)
 
 ## 🎵 Audio Requirements
 
@@ -119,12 +118,29 @@ FLUX API has **strict audio format requirements**:
 
 **Note**: Compressed formats (MP3, AAC, WebM) won't work with FLUX API.
 
+## 🚀 Deployment
+
+This demo is containerized and ready for deployment to any platform that supports Docker.
+
+### Deployment Files Included
+- **`Dockerfile`**: Multi-stage Node.js container setup
+- **`fly.toml`**: Fly.io configuration (can be adapted for other platforms)
+
+### Environment Variables
+- **`DEEPGRAM_API_KEY`**: Your Deepgram API key (required)
+
+### Base Path Support
+The application supports flexible routing:
+- **Local development**: Both `http://localhost:3000` and `http://localhost:3000/flux-streaming` work
+- **Production**: Can be deployed at any base path (configured via `/flux-streaming` by default)
+- **WebSocket connections**: Automatically adapt to the host and path structure
+
 ## 🔧 Troubleshooting
 
 ### Connection Issues
 - **Check API key**: Verify `DEEPGRAM_API_KEY` environment variable is set
 - **FLUX access**: Ensure your Deepgram account has FLUX early access enabled
-- **Port conflicts**: Make sure ports 3000 and 3001 are available
+- **Port conflicts**: Make sure port 3000 is available
 - **Server logs**: Check terminal for detailed connection error messages
 
 ### Microphone Issues
