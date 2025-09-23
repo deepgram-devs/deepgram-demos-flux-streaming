@@ -120,6 +120,7 @@
                 this.elements.connectBtn.disabled = true;
 
                 // Build WebSocket URL with parameters for our local proxy
+                const BASE_PATH = '/flux-streaming';
                 const params = new URLSearchParams({
                     model: 'flux-general-en',
                     sample_rate: '16000',
@@ -133,8 +134,9 @@
                     params.append('eager_eot_threshold', eagerEotThreshold);
                 }
 
-                // Connect to our local WebSocket proxy server
-                const wsUrl = `ws://localhost:3001?${params.toString()}`;
+                // Connect to our local WebSocket proxy server (same host, configured base path)
+                const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
+                const wsUrl = `${wsProtocol}://${location.host}${BASE_PATH}?${params.toString()}`;
                 this.log(`🔗 Connecting to: ${wsUrl}`);
                 this.ws = new WebSocket(wsUrl);
 

@@ -6,7 +6,7 @@ const WebSocket = require('ws');
 const { URL } = require('url');
 
 const PORT = 3000;
-const WS_PORT = 3001;
+const BASE_PATH = '/flux-streaming';
 
 // Get API key from environment variable
 const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
@@ -69,8 +69,21 @@ async function testFluxApiConnectivity() {
 }
 
 const server = http.createServer((req, res) => {
+  // Simple static file server with base path handling
+  let requestPath = req.url;
+  if (requestPath.startsWith(BASE_PATH)) {
+    requestPath = requestPath.substring(BASE_PATH.length);
+  }
+  // Normalize to a relative path inside the project
+  let relativePath = requestPath;
+  if (!relativePath || relativePath === '/') {
+    relativePath = 'index.html';
+  }
+  if (relativePath.startsWith('/')) {
+    relativePath = relativePath.slice(1);
+  }
   // Simple static file server
-  let filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
+  let filePath = path.join(__dirname, relativePath);
 
   // Security check - only serve files in current directory
   if (!filePath.startsWith(__dirname)) {
@@ -108,8 +121,8 @@ const server = http.createServer((req, res) => {
   });
 });
 
-// WebSocket proxy server
-const wsServer = new WebSocket.Server({ port: WS_PORT });
+// WebSocket proxy server attached to the same HTTP server
+const wsServer = new WebSocket.Server({ server });
 
 wsServer.on('connection', async (clientWs, req) => {
   console.log('🔌 Client connected to WebSocket proxy');
@@ -117,7 +130,7 @@ wsServer.on('connection', async (clientWs, req) => {
   console.log(`   User-Agent: ${req.headers['user-agent'] || 'Unknown'}`);
 
   // Extract query parameters from the client request
-  const url = new URL(req.url, `http://localhost:${WS_PORT}`);
+  const url = new URL(req.url, `http://localhost:${PORT}`);
   const searchParams = url.searchParams;
 
   // Build Deepgram WebSocket URL with client parameters
@@ -263,7 +276,7 @@ wsServer.on('connection', async (clientWs, req) => {
 
 server.listen(PORT, async () => {
   console.log(`🚀 FLUX Demo server running at http://localhost:${PORT}`);
-  console.log(`🔌 WebSocket proxy running on port ${WS_PORT}`);
+  console.log(`🔌 WebSocket proxy running on port ${PORT}`);
   console.log(`🔑 Using API key: ${DEEPGRAM_API_KEY.substring(0, 8)}...${DEEPGRAM_API_KEY.substring(DEEPGRAM_API_KEY.length - 4)}`);
   console.log('📝 Open the URL in your browser to test the FLUX API');
 
