@@ -8,6 +8,7 @@ const { URL } = require('url');
 const PORT = 3000;
 const BASE_PATH = process.env.NODE_ENV === 'production' ? '/flux-streaming' : '';
 
+
 // Get API key from environment variable
 const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
 
