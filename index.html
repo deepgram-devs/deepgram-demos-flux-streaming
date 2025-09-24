@@ -131,6 +131,12 @@
                 // Add eager eot threshold if specified
                 const eagerEotThreshold = this.elements.eagerEotThreshold.value;
                 if (eagerEotThreshold) {
+                    if (eagerEotThreshold > (this.elements.eotThreshold.value || 0.7)) {
+                        this.log('❌ Eager End-of-Turn Threshold must be below End-of-Turn Threshold');
+                        this.updateStatus('disconnected', 'Disconnected');
+                        this.elements.connectBtn.disabled = false;
+                        return;
+                    }
                     params.append('eager_eot_threshold', eagerEotThreshold);
                 }
 
