@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deepgram FLUX API Demo</title>
-    <link rel="stylesheet" href="styles/deepgram-minimal.css">
+    <link rel="stylesheet" href="./styles/deepgram-minimal.css">
   </head>
   <body>
     <div class="dg-container">
@@ -120,7 +120,8 @@
                 this.elements.connectBtn.disabled = true;
 
                 // Build WebSocket URL with parameters for our local proxy
-                const BASE_PATH = '/flux-streaming';
+                // Auto-detect if we're running under /flux-streaming path
+                const BASE_PATH = location.pathname.startsWith('/flux-streaming') ? '/flux-streaming' : '';
                 const params = new URLSearchParams({
                     model: 'flux-general-en',
                     sample_rate: '16000',
