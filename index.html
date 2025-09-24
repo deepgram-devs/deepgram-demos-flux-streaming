@@ -121,7 +121,7 @@
 
                 // Build WebSocket URL with parameters for our local proxy
                 // Auto-detect if we're running under /flux-streaming path
-                const BASE_PATH = location.pathname.startsWith('/flux-streaming') ? '/flux-streaming' : '';
+                const BASE_PATH = (location.pathname === '/flux-streaming' || location.pathname.startsWith('/flux-streaming/')) ? '/flux-streaming' : '';
                 const params = new URLSearchParams({
                     model: 'flux-general-en',
                     sample_rate: '16000',
