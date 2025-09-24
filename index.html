@@ -359,7 +359,7 @@
                     data.audio_window_start !== undefined && data.audio_window_end !== undefined
                         ? `${data.audio_window_start.toFixed(1)}s - ${data.audio_window_end.toFixed(1)}s`
                         : '-';
-                this.elements.currentTranscript.textContent = data.transcript || 'Waiting for speech...';
+                this.elements.currentTranscript.textContent = data.transcript || this.elements.currentTranscript.textContent;
             }
 
             updateStatus(type, message) {
