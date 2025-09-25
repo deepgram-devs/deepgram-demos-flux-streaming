@@ -61,13 +61,11 @@ This demo will run in Chrome and Safari browsers only. No Firefox support.
    ```bash
    npm start
    ```
-   Or directly:
-   ```bash
-   node server.js
-   ```
 
 4. **Open the demo:**
-   Navigate to `http://localhost:3000` or `http://localhost:3000/flux-streaming`
+   Navigate to `http://localhost:3000`
+
+ Note: To open the demo in Production Mode run `NODE_ENV=production npm start` and navigate to: `http://localhost:3000/flux-streaming`
 
 ### Testing FLUX
 
@@ -78,7 +76,7 @@ This demo will run in Chrome and Safari browsers only. No Firefox support.
 
 ## ⚙️ Configuration Options
 
-### Eager End-of-Turn Threshold (0.2-0.9, optional)
+### Eager End-of-Turn Threshold (0.3-0.9, optional)
 - **Leave empty**: Disable for simpler implementation
 - **Lower values (0.2-0.4)**: More aggressive early turn detection
 - **Higher values (0.6-0.9)**: More conservative early turn detection
