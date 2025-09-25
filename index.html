@@ -7,8 +7,33 @@
     <link rel="stylesheet" href="/flux-streaming/styles/deepgram-minimal.css">
   </head>
   <body>
-    <div class="dg-container">
-        <h1>🎤 Deepgram FLUX API Demo</h1>
+    <!-- Sticky Navigation -->
+    <nav class="dg-sticky-nav">
+        <div class="dg-sticky-nav__container">
+            <div class="dg-sticky-nav__logo">
+                <span class="dg-sticky-nav__logo-text">
+                    Deepgram Flux Streaming Demo
+                </span>
+            </div>
+            <div class="dg-sticky-nav__menu">
+                <span class="dg-status-btn dg-status-btn--disconnected" id="connectionStatus">
+                    Disconnected
+                </span>
+                <a href="http://developers.deepgram.com/docs/stt/getting-started" class="dg-github-btn" target="_blank" rel="noopener noreferrer">
+                    <span class="dg-github-text">Documentation</span>
+                </a>
+                <a href="https://github.com/deepgram-devs/deepgram-demos-flux-streaming" class="dg-github-btn" target="_blank" rel="noopener noreferrer">
+                    <span class="dg-github-text">View on GitHub</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content with body padding for sticky nav -->
+    <div class="dg-body-with-sticky-nav">
+        <div class="dg-container">
+            <h1>🎤 Deepgram Flux Streaming Demo</h1>
+            <p class="dg-prose--small dg-text-center">Use the Deepgram Flux Streaming API to transcribe speech in real-time.</p>
 
         <div class="dg-panel">
             <h3>FLUX Configuration</h3>
@@ -27,10 +52,6 @@
                     Confidence level required to detect end of speech turn
                 </small>
             </div>
-        </div>
-
-        <div class="dg-status dg-status--disconnected" id="connectionStatus">
-            Disconnected
         </div>
 
             <div class="dg-controls">
@@ -370,7 +391,7 @@
             }
 
             updateStatus(type, message) {
-                this.elements.connectionStatus.className = `dg-status dg-status--${type}`;
+                this.elements.connectionStatus.className = `dg-status-btn dg-status-btn--${type}`;
                 this.elements.connectionStatus.textContent = message;
             }
 
@@ -387,5 +408,7 @@
             new FluxDemo();
         });
     </script>
+        </div>
+    </div>
   </body>
 </html>
