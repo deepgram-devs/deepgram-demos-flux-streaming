@@ -101,6 +101,17 @@ body {
     padding: var(--dg-space-5);
 }
 
+/* Body with sticky nav - adds top padding to account for fixed header */
+.dg-body-with-sticky-nav {
+    padding-top: 80px; /* Height of sticky nav + some margin */
+}
+
+@media (max-width: 768px) {
+    .dg-body-with-sticky-nav {
+        padding-top: 70px; /* Smaller padding on mobile */
+    }
+}
+
 /* ==========================================================================
    CONTAINER COMPONENTS
    ========================================================================== */
@@ -165,6 +176,11 @@ h3 {
     font-size: var(--dg-text-lg);
     font-weight: var(--dg-font-weight-medium);
     margin-bottom: var(--dg-space-4);
+}
+
+/* Text Utilities */
+.dg-text-center {
+    text-align: center;
 }
 
 /* ==========================================================================
@@ -395,4 +411,125 @@ small {
     color: var(--dg-text-primary);
     margin-top: var(--dg-space-2);
     font-weight: var(--dg-font-weight-medium);
+}
+
+/* ==========================================================================
+   STICKY NAVIGATION
+   ========================================================================== */
+
+.dg-sticky-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background-color: var(--dg-surface);
+    border-bottom: var(--dg-border-width-thin) solid var(--dg-border);
+    box-shadow: var(--dg-shadow-md);
+    backdrop-filter: blur(8px);
+}
+
+.dg-sticky-nav__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--dg-space-4) var(--dg-space-5);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dg-sticky-nav__logo {
+    display: flex;
+    align-items: center;
+    gap: var(--dg-space-3);
+}
+
+.dg-sticky-nav__logo-text {
+    font-size: var(--dg-text-lg);
+    font-weight: var(--dg-font-weight-semibold);
+    color: var(--dg-text-primary);
+}
+
+.dg-sticky-nav__menu {
+    display: flex;
+    align-items: center;
+    gap: var(--dg-space-4);
+}
+
+.dg-github-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--dg-space-2);
+    padding: var(--dg-space-2) var(--dg-space-4);
+    background-color: var(--dg-surface-elevated);
+    border: var(--dg-border-width-thin) solid var(--dg-border);
+    border-radius: var(--dg-radius-md);
+    color: var(--dg-text-primary);
+    text-decoration: none;
+    font-size: var(--dg-text-sm);
+    font-weight: var(--dg-font-weight-medium);
+    transition: all var(--dg-transition-normal);
+}
+
+.dg-github-btn:hover {
+    background-color: var(--dg-surface);
+    border-color: var(--dg-border-strong);
+    box-shadow: var(--dg-shadow-sm);
+    color: var(--dg-text-primary);
+}
+
+/* Status Button - styled like GitHub button but with status colors */
+.dg-status-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--dg-space-2);
+    padding: var(--dg-space-2) var(--dg-space-4);
+    border: var(--dg-border-width-thin) solid;
+    border-radius: var(--dg-radius-md);
+    font-size: var(--dg-text-sm);
+    font-weight: var(--dg-font-weight-medium);
+    transition: all var(--dg-transition-normal);
+}
+
+.dg-status-btn--disconnected {
+    background-color: rgba(240, 68, 56, 0.1);
+    color: var(--dg-danger);
+    border-color: var(--dg-danger);
+}
+
+.dg-status-btn--connecting {
+    background-color: rgba(254, 200, 75, 0.1);
+    color: var(--dg-warning);
+    border-color: var(--dg-warning);
+}
+
+.dg-status-btn--connected {
+    background-color: rgba(18, 183, 106, 0.1);
+    color: var(--dg-success);
+    border-color: var(--dg-success);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .dg-sticky-nav__container {
+        padding: var(--dg-space-3) var(--dg-space-4);
+    }
+
+    .dg-sticky-nav__logo-text {
+        font-size: var(--dg-text-base);
+    }
+
+    .dg-github-btn {
+        padding: var(--dg-space-2) var(--dg-space-3);
+        font-size: var(--dg-text-sm);
+    }
+
+    .dg-status-btn {
+        padding: var(--dg-space-2) var(--dg-space-3);
+        font-size: var(--dg-text-sm);
+    }
+
+    .dg-github-text {
+        display: none; /* Hide "View on GitHub" text on mobile */
+    }
 }
