@@ -20,7 +20,7 @@ if (!DEEPGRAM_API_KEY) {
 
 // Connectivity test function for FLUX API
 async function testFluxApiConnectivity() {
-  const testUrl = 'api.preview.deepgram.com';
+  const testUrl = 'api.deepgram.com';
   const port = 443; // HTTPS/WSS port
 
   console.log('\n🔍 Testing FLUX API Connectivity...');
@@ -135,7 +135,7 @@ wsServer.on('connection', async (clientWs, req) => {
   const searchParams = url.searchParams;
 
   // Build Deepgram WebSocket URL with client parameters
-  const deepgramUrl = `wss://api.preview.deepgram.com/v2/listen?${searchParams.toString()}`;
+  const deepgramUrl = `wss://api.deepgram.com/v2/listen?${searchParams.toString()}`;
 
   console.log(`\n🎯 Preparing FLUX API Connection:`);
   console.log(`   Full URL: ${deepgramUrl}`);
@@ -299,7 +299,7 @@ server.listen(PORT, async () => {
   }
 
   console.log('\n' + '='.repeat(60));
-  console.log('🎯 FLUX API Target: wss://api.preview.deepgram.com/v2/listen');
+  console.log('🎯 FLUX API Target: wss://api.deepgram.com/v2/listen');
   console.log('📊 Ready to accept client connections...');
   console.log('='.repeat(60) + '\n');
 });
