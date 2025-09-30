@@ -163,3 +163,12 @@ When everything is working correctly, you should see:
 - Message type debugging information
 
 ![ui_image](./images/ui-example.png)
+
+## Getting Help
+
+We love to hear from you! If you have questions:
+
+- [Join the Deepgram Github Discussions Community](https://github.com/orgs/deepgram/discussions)
+- [Join the Deepgram Discord Community](https://discord.gg/xWRaCDBtW4)
+
+[license]: LICENSE.txt
