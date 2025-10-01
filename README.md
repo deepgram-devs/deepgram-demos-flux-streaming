@@ -71,7 +71,7 @@ This demo will run in Chrome and Safari browsers only. No Firefox support.
 
 ### Eager End-of-Turn Threshold (0.3-0.9, optional)
 - **Leave empty**: Disable for simpler implementation
-- **Lower values (0.2-0.4)**: More aggressive early turn detection
+- **Lower values (0.3-0.4)**: More aggressive early turn detection
 - **Higher values (0.6-0.9)**: More conservative early turn detection
 - **Recommended**: Start with 0.6 for balanced performance
 
