@@ -4,8 +4,6 @@ A simple JavaScript demo application for testing the Deepgram FLUX API - the fir
 
 ## 🎯 What is FLUX?
 
-> TODO: Make sure this link works after docs deploy
-
 FLUX is Deepgram's breakthrough conversational AI model that understands **turn-taking dynamics** - not just transcribing words, but knowing when to listen, when to think, and when to speak. Perfect for building voice agents and interactive applications. Learn more about Flux by checking out our [Documentation](https://developers.deepgram.com/docs/stt/getting-started)
 
 ## Demo Browser Support
