@@ -1,6 +1,6 @@
 # Deepgram FLUX Streaming Demo
 
-A simple JavaScript demo application for testing the Deepgram FLUX API - the first conversational speech recognition model designed for voice agents.
+A Simple JavaScript demo application that let's you transcribe spoken audio in the browser using Flux.
 
 ## 🎯 What is FLUX?
 
