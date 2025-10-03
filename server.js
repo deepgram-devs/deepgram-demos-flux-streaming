@@ -71,7 +71,9 @@ async function testFluxApiConnectivity() {
 
 const server = http.createServer((req, res) => {
   // Simple static file server with base path handling
-  let requestPath = req.url;
+  // Parse URL to separate pathname from query parameters
+  const parsedUrl = new URL(req.url, `http://localhost:${PORT}`);
+  let requestPath = parsedUrl.pathname;
   if (requestPath.startsWith(BASE_PATH)) {
     requestPath = requestPath.substring(BASE_PATH.length);
   }
